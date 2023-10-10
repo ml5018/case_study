@@ -44,3 +44,11 @@ nyc_airbnb =
 
 # brainstorm questions
 
+* Where are airbnbs expensive?
+  - Borough? Neighbourhood?
+  - Do other factors (room type) affect price? What about rating?
+* How long are airbnbs active?
+  - Are they illegal and do they get shut down?
+* Which units have the most availability?
+* How is review score impacted by location?
+* How many apts are run by one host?
