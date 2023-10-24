@@ -2,13 +2,15 @@
 title: "case study"
 author: "Luan Mengxiao"
 date: 2023-10-10
-output: github_document
+output: html_document
 ---
 
 # set up
 
-```{r}
+```{r, message = FALSE}
 library(tidyverse)
+library(ggridges)
+library(leaflet)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -51,4 +53,105 @@ nyc_airbnb =
   - Are they illegal and do they get shut down?
 * Which units have the most availability?
 * How is review score impacted by location?
-* How many apts are run by one host?
+* How many apts are run by one host
+
+# do some EDA
+
+```{r}
+nyc_airbnb |>
+  count(borough)
+```
+
+```{r}
+nyc_airbnb |>
+  group_by(borough, room_type) |>
+  summarize(mean_price = mean(price)) |>
+  pivot_wider(
+    names_from = room_type,
+    values_from = mean_price
+  )
+
+nyc_airbnb |>
+  group_by(borough, room_type) |>
+  summarize(median_price = median(price)) |>
+  pivot_wider(
+    names_from = room_type,
+    values_from = median_price
+  )
+```
+
+```{r}
+nyc_airbnb |>
+  ggplot(aes(x = price)) +
+  geom_histogram() +
+  facet_grid(borough~room_type)
+```
+
+```{r}
+nyc_airbnb |>
+  filter(price >= 9500)
+```
+
+```{r}
+nyc_airbnb |>
+  filter(price < 1000, room_type == "Entire home/apt") |>
+  ggplot(aes(x = price)) +
+  geom_histogram() +
+  facet_grid(.~borough)
+```
+
+```{r}
+nyc_airbnb |>
+  filter(price < 1000, 
+         room_type == "Entire home/apt", 
+         borough == "Manhattan") |>
+  group_by(neighbourhood) |>
+  summarize(
+    n_apt = n(),
+    mean_price = mean(price)) |>
+  arrange(desc(mean_price))
+```
+
+```{r}
+nyc_airbnb |>
+  filter(price < 1000, 
+         room_type == "Entire home/apt", 
+         borough == "Manhattan") |>
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) |>
+  ggplot(aes(x = neighbourhood, y = price)) +
+  geom_boxplot()
+
+nyc_airbnb |>
+  filter(price < 1000, 
+         room_type == "Entire home/apt", 
+         borough == "Manhattan") |>
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) |>
+  ggplot(aes(x = price, y = neighbourhood)) +
+  geom_density_ridges()
+```
+
+# try to make a map
+
+```{r}
+nyc_airbnb |>
+  filter(price < 1000, 
+         room_type == "Entire home/apt", 
+         borough == "Manhattan") |>
+  ggplot(aes(x = lat, y = long, color = price)) +
+  geom_point()
+```
+
+# try something else entirely
+
+```{r}
+nyc_airbnb |>
+  filter(price < 1000, 
+         room_type == "Entire home/apt", 
+         borough == "Manhattan") |>
+  sample_n(500) |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(~lat, ~long, radius = .5)
+```
+
+# attempt solutions
